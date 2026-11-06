@@ -74,7 +74,6 @@
 
 | Phần | Bạn hỏi AI gì (prompt) | AI trả lời/viết gì | Bạn đã sửa / kiểm chứng gì |
 |---|---|---|---|
-
 | 4.4 | Làm sao xử lý lỗi `RateLimitError: 429 - Quota exceeded` của API Groq/Gemini? | AI giải thích do Free Tier giới hạn 15 RPM, gọi 40 tin/batch sẽ bị chặn. Đề xuất dùng `time.sleep` hoặc bọc trong hàm `retry_with_backoff`. | Chạy qua hàm `retry_with_backoff` đã cung cấp sẵn để code tự động đợi và thử lại. |
 
 
