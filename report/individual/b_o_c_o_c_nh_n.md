@@ -74,10 +74,9 @@
 
 | Phần | Bạn hỏi AI gì (prompt) | AI trả lời/viết gì | Bạn đã sửa / kiểm chứng gì |
 |---|---|---|---|
-| 1.B | Hiện tượng ở lr=50 trong loss curve | Giải thích hiện tượng Sigmoid bị bão hòa làm gradient sát về 0 khiến loss đứng im ở mức thấp nhưng overfit (nổ trọng số). | Đọc hiểu và viết lại phần giải thích vào notebook. |
+
 | 4.4 | Làm sao xử lý lỗi `RateLimitError: 429 - Quota exceeded` của API Groq/Gemini? | AI giải thích do Free Tier giới hạn 15 RPM, gọi 40 tin/batch sẽ bị chặn. Đề xuất dùng `time.sleep` hoặc bọc trong hàm `retry_with_backoff`. | Chạy qua hàm `retry_with_backoff` đã cung cấp sẵn để code tự động đợi và thử lại. |
-| 5 | Tại sao cột USD/1k tin lại bằng 0 hết? | AI giải thích các mô hình 1-3 chạy local tốn 0đ, còn model 4 dùng Groq chưa được khai báo đơn giá trong biến `PRICE_PER_1M` nên hàm `.get()` mặc định trả về 0. | Xác nhận lại Colab Secrets đang xài key Groq. |
-| 5 | Hướng dẫn làm bài tính tay (F1, Cosine, Chi phí) | Cung cấp công thức và phép tính chi tiết cho 5 câu hỏi tính tay. | Viết lại ra giấy, tính toán đối chiếu và điền đáp án vào biến `HAND_CALC`. |
+
 
 **Điều đã học hôm nay:**
 Trước đây em chỉ biết đánh giá mô hình bằng Accuracy, hôm nay em đã hiểu với dữ liệu mất cân bằng (Spam chỉ 13%), Accuracy 98% là vô nghĩa và phải dùng F1/Precision/Recall. Ngoài ra, em cũng thấy rõ sự đánh đổi khốc liệt giữa tốc độ, độ chính xác và chi phí của LLM so với các mô hình truyền thống (đường Pareto), LLM rất thông minh nhưng không thể \"bê nguyên\" vào hệ thống cần xử lý hàng triệu request tốc độ cao nếu không có cơ chế Router phù hợp.
