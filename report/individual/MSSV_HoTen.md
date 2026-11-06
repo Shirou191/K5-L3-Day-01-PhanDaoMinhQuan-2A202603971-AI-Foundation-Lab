@@ -78,16 +78,57 @@ Vì sao: Việc cung cấp ví dụ (in-context learning) giúp LLM nhỏ cân c
 
 ## 4. Phân tích 50 case khó
 
-*Model nào tụt nhiều nhất, ở nhóm case nào? Nêu 2 case cụ thể và cơ chế khiến model sai.*
+Model tụt nhiều nhất: Mô hình 1. BoW + LogReg (tụt F1 từ 0.919 xuống 0.378, Accuracy chỉ còn 54%) và 2. BoW + MLP (F1 tụt còn 0.450).
+
+Nhóm case khó nhất với BoW:
+
+Né từ khóa (Obfuscation): Đúng 17%. Ví dụ: Get your l0an appr0ved in 5 m1nutes, n0 credit check. Repl¥ L0AN. Tokenizer cắt sai hoặc sinh ra token lạ, BoW hoàn toàn mù do không có trong vocab.
+
+Thao túng/Lừa đảo (Manipulation): Đúng 12%. Ví dụ: Hi Mum, I dropped my phone in the toilet... Can you send £200.... Không chứa các từ khóa spam cổ điển, BoW nhìn vào tưởng là tin nhắn bạn bè/người thân.
+
+Cơ chế khiến model sai: BoW đánh giá văn bản bằng cách đếm các túi từ rời rạc. Nếu thiếu từ khóa (false negative) hoặc từ khóa nằm trong ngữ cảnh vô hại (false positive), mô hình sẽ hoàn toàn sụp đổ vì không có khả năng hiểu ngữ nghĩa toàn cục của câu.
 
 ## 5. Thử thách cá nhân
 
-*Đề theo SEED của bạn, cách làm, kết quả, giải thích.*
+Đề bài: Đề #4 — Embedding: Chạy knn_predict với k = 1, 5, 25. Báo F1. Vì sao k quá nhỏ hoặc quá lớn đều có hại?
 
+Cách làm: Viết vòng lặp for chạy hàm knn_predict trên tập test với các giá trị k khác nhau, sau đó gọi hàm metrics để in ra kết quả.
+
+Kết quả:
+
+k = 1: F1 = 0.955
+
+k = 5: F1 = 0.960
+
+k = 25: F1 = 0.913
+
+Giải thích:
+
+k quá nhỏ (k=1): Mô hình rất nhạy với nhiễu. Chỉ cần 1 tin nhắn rác bị gán nhãn nhầm hoặc 1 tin có vector vô tình nằm gần là quyết định bị đảo lộn (high variance).
+
+k quá lớn (k=25): Mô hình bị "bias" về phía lớp đa số (lớp ham chiếm 87%). Bán kính lân cận quá rộng bao trùm luôn cả các tin ham, khiến spam bị lọt lưới rất nhiều (recall giảm mạnh).
 ## 6. Phương án cho sản phẩm thật
 
-*Với yêu cầu p95 < 50 ms/tin cho 10 triệu SMS/ngày: chọn phương án nào, dẫn số liệu nào, chấp nhận đánh đổi gì.*
+Yêu cầu: 10 triệu SMS/ngày (~116 tin/s), SLA p95 < 50 ms/tin.
+
+Phương án đề xuất: Hệ thống lai (Router).
+
+Lớp 1 (Chốt chặn chính): Dùng 3b. Encoder (MiniLM) + LogReg (nếu tối ưu được phần cứng để p95 < 50ms) hoặc 2. BoW + MLP (hiện tại p95 cực thấp: 0.236ms). Các mô hình này cực rẻ, nhanh, sẽ tự động gán nhãn ngay cho các tin có xác suất rất cao (p < 0.2 là ham, p > 0.8 là spam).
+
+Lớp 2 (Deep inspection): Đối với các tin "nhập nhằng" (0.2 ≤ p ≤ 0.8) hoặc nghi ngờ có prompt injection/obfuscation, ta route qua LLM nhỏ (zero-shot/few-shot).
+
+Đánh đổi: LLM rất đắt và độ trễ cao (hàng ngàn ms). Việc dùng Router giúp ta đánh đổi một lượng rất nhỏ chi phí và độ trễ (chỉ chạy LLM trên <5% data) để cứu lại độ chính xác trên các case lừa đảo tinh vi mà BoW hay Embedding chịu thua.
+
+
 
 ## 7. AI log và điều đã học
 
-*Mỗi lần dùng AI: hỏi gì, nhận gì, bạn sửa gì. Sau đó 2–3 câu: điều bạn hiểu ra hôm nay mà trước đó chưa hiểu.*
+4.4
+
+Làm sao xử lý lỗi RateLimitError: 429 - Quota exceeded của API Groq/Gemini?
+
+AI giải thích do Free Tier giới hạn 15 RPM, gọi 40 tin/batch sẽ bị chặn. Đề xuất dùng time.sleep hoặc bọc trong hàm retry_with_backoff.
+
+Chạy qua hàm retry_with_backoff đã cung cấp sẵn để code tự động đợi và thử lại.
+
+Trước đây em chỉ biết đánh giá mô hình bằng Accuracy, hôm nay em đã hiểu với dữ liệu mất cân bằng (Spam chỉ 13%), Accuracy 98% là vô nghĩa và phải dùng F1/Precision/Recall. Ngoài ra, em cũng thấy rõ sự đánh đổi khốc liệt giữa tốc độ, độ chính xác và chi phí của LLM so với các mô hình truyền thống (đường Pareto), LLM rất thông minh nhưng không thể "bê nguyên" vào hệ thống cần xử lý hàng triệu request tốc độ cao nếu không có cơ chế Router phù hợp.
